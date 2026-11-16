@@ -202,6 +202,17 @@ a{color:inherit}
  .cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(4,1fr)}.rail{grid-auto-columns:260px}.top .logo{font-size:14px}.chips{top:51px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html[lang=uz] body{word-spacing:.08em}
+.add{background:color-mix(in srgb,var(--m) 10%,#fff)!important;color:var(--d)!important;border:1.5px solid color-mix(in srgb,var(--m) 35%,#fff)!important;padding:9px!important;font-size:13.5px!important}
+.fab{padding:10px 16px!important;font-size:14px!important;border-radius:16px!important}
+.more{display:inline-block;margin-top:6px;font-size:13px;font-weight:800;color:var(--m);cursor:pointer}
+.inf{margin:14px 0 4px;background:color-mix(in srgb,var(--m) 7%,#fff);border-radius:18px;padding:14px 14px 12px}
+.inf h4{margin:0 0 6px;font:800 15px Manrope,system-ui}.inf p{margin:0 0 8px;font-size:15px;line-height:1.45}
+.inf ul{margin:0;padding-left:18px;font-size:14px;line-height:1.5}
+.gal{display:flex;gap:8px;overflow-x:auto;margin-top:10px;scrollbar-width:none}.gal img{height:96px;width:96px;object-fit:contain;background:#fff;border-radius:12px;flex:none;cursor:zoom-in}
+.vid{margin-top:10px;position:relative;border-radius:14px;overflow:hidden;background:#000;cursor:pointer;aspect-ratio:9/12;max-height:520px}
+.vid img{width:100%;height:100%;object-fit:cover;opacity:.85}.vid b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:54px;color:#fff;text-shadow:0 2px 12px #000}
+.vid iframe{width:100%;height:100%;border:0}
+.vlink{display:block;margin-top:10px;text-align:center;background:#111;color:#fff;border-radius:14px;padding:12px;font-weight:800;text-decoration:none}
 .lng{flex:none;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font:800 13px Manrope,system-ui,sans-serif;border-radius:12px;padding:9px 10px;margin-right:8px;cursor:pointer}
 </style>
 </head>
@@ -258,7 +269,7 @@ const img=(p,k)=>p.img?`<img loading="lazy" onerror="if(!this.dataset.r){this.da
 function card(p){
   return `<div class="card">${p.hits>=8?'<div class="badge">★ Хит продаж</div>':''}
   <div class="im" onclick="openP(${p.id})">${img(p,'th')}${p.img?'<div class="lens">⤢</div>':''}</div>
-  <div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm" onclick="openP(${p.id})">${esc(p.name)}</div>
+  <div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm" onclick="openP(${p.id})">${esc(p.name)}</div>${p.inf?`<span class="more" onclick="openP(${p.id})">ℹ️ Подробнее</span>`:''}
   <div class="meta">Артикул: <b>${esc(p.art)}</b><br>В наличии: <b>${fmt(p.stock)} ${p.unit}</b>${p.note?'<br>'+esc(p.note):''}</div>
   <div class="price">${fmt(p.price)} <small>сум ${p.per}</small></div><div data-q="${p.id}">${qtyHtml(p.id)}</div></div></div>`}
 function sortList(a){a=a.slice();
@@ -318,10 +329,26 @@ function showP(){const p=curList[curIdx];
   <div class="big">${fmt(p.price)} <small style="font-size:15px;color:#587074;font-weight:600">сум ${p.per}</small></div>
   <div class="row"><span>Артикул</span><b>${esc(p.art)}</b></div><div class="row"><span>В наличии</span><b>${fmt(p.stock)} ${p.unit}</b></div>
   ${p.note?`<div class="row"><span>Упаковка</span><b>${esc(p.note)}</b></div>`:''}${p.hits>=8?`<div class="row"><span>Популярность</span><b style="color:var(--or)">★ Хит продаж</b></div>`:''}
+  ${p.inf?'<div class="inf" id="inf">⏳</div>':''}
   <div data-q="${p.id}" style="margin-top:10px">${qtyHtml(p.id)}</div>
   <div id="gocart">${goCart()}</div>
   ${curList.length>1?`<div class="nav"><button onclick="step(-1)">← Назад</button><button onclick="step(1)">Дальше →</button></div>`:''}`;
-  $('#ov').classList.add('on');document.body.style.overflow='hidden';$('#sheet').scrollTop=0}
+  $('#ov').classList.add('on');document.body.style.overflow='hidden';$('#sheet').scrollTop=0;if(p.inf)loadInf(p.id)}
+/* подробности: ../info/<id>.json грузится только при открытии товара */
+const INF={};
+async function loadInf(id){const el=()=>document.getElementById('inf');
+  try{const d=INF[id]||(INF[id]=await (await fetch(IMG+'info/'+id+'.json?v='+D.ts)).json());if(!el()||curList[curIdx].id!=id)return;
+    const t=d[LANG]||d.ru,ph=(d.media||[]).filter(m=>m.type=='photo'),vd=(d.media||[]).find(m=>m.type=='video');
+    el().innerHTML=`<h4>${LANG=='uz'?'Mahsulot haqida':'О товаре'}</h4><p>${esc(t.t)}</p>${(t.f||[]).length?'<ul>'+t.f.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':''}
+     ${ph.length?'<div class="gal">'+ph.map(m=>`<img loading="lazy" src="${IMG}info/${m.src}" onclick="openViewerSrc(this.src)" alt="">`).join('')+'</div>':''}${vd?vidHtml(vd.url):''}`}
+  catch(e){if(el())el().remove()}}
+function vidEmbed(u){let m;
+  if(m=u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/))return{e:'https://www.youtube-nocookie.com/embed/'+m[1]+'?autoplay=1&playsinline=1',th:'https://i.ytimg.com/vi/'+m[1]+'/hqdefault.jpg'};
+  if(m=u.match(/instagram\.com\/(?:reel|p|tv)\/([\w-]+)/))return{e:'https://www.instagram.com/reel/'+m[1]+'/embed'};
+  if(m=u.match(/tiktok\.com\/.*video\/(\d+)/))return{e:'https://www.tiktok.com/embed/v2/'+m[1]};return null}
+function vidHtml(u){const v=vidEmbed(u);if(!v)return `<a class="vlink" href="${esc(u)}" target="_blank" rel="noopener">▶ ${LANG=='uz'?'Videoni ko‘rish':'Смотреть видео'}</a>`;
+  return `<div class="vid" onclick="this.innerHTML='<iframe allow=&quot;autoplay; encrypted-media; fullscreen&quot; allowfullscreen src=&quot;${v.e}&quot;></iframe>';this.onclick=null">${v.th?`<img loading="lazy" src="${v.th}" alt="">`:''}<b>▶</b></div>`}
+function openViewerSrc(src){const i=$('#vimg');i.onload=()=>{V={s:1,x:innerWidth/2,y:innerHeight/2};vt()};i.src=src;$('#viewer').classList.add('on')}
 function step(d){curIdx=(curIdx+d+curList.length)%curList.length;showP()}
 function closeSheet(){$('#ov').classList.remove('on');document.body.style.overflow='';ordOpen=false}
 $('#ov').addEventListener('click',e=>{if(e.target.id=='ov')closeSheet()});

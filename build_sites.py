@@ -106,6 +106,8 @@ def pic(i):
 tpl=open('site_tpl.html').read()
 if IMGV: open(OUT+'/.imgv2','w').write('1')
 used=set(); report=[]
+_IF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'info','info.json')
+INFO=json.load(open(_IF)) if os.path.exists(_IF) else {}   # описания «Подробнее»: {id: {ru,uz,media}}
 for S in SITES:
     cats=[];prods=[];seen=set()
     for n,(t,s,ids,ic) in enumerate(S['secs'],1):
@@ -119,7 +121,7 @@ for S in SITES:
             elif m and 'ZAPAS' in x['title'].upper() and unit=='шт': note=f'В упаковке {m.group(1)} шт, цена за упаковку'
             prods.append(dict(id=i,cat=n,name=B.clean(x['title']) or x['title'],raw=x['title'],kind=kind(i),art=str(x['vendor_code'] or x['barcode'] or i),
                 stock=int(float(x['available'])),unit=unit,price=int(cur[i]),per=('за шт' if unit=='шт' else 'за '+unit.lower()),
-                hits=len(pop[i]),note=note,img=im,box=(int(bx) if bx and unit=='шт' and 1<int(bx)<=5000 else 0)))
+                hits=len(pop[i]),note=note,img=im,inf=int(str(i) in INFO),box=(int(bx) if bx and unit=='шт' and 1<int(bx)<=5000 else 0)))
     pid={p['id']:p for p in prods}
     def pick(c,by): xs=[p for p in prods if p['cat']==c['id'] and p['img']]; return max(xs,key=by)['id'] if xs else 0
     byp=lambda p:(p['price']*(1+p['hits']),p['stock'])
@@ -146,6 +148,18 @@ for S in SITES:
 # главная со ссылками на три каталога
 links=''.join(f'<a href="{S["key"]}/" style="display:block;margin:12px 0;padding:18px;border-radius:16px;color:#fff;text-decoration:none;font:700 20px system-ui;background:linear-gradient(90deg,{S["d"]},{S["m"]})">{S["icon"]} {S["h1"]}</a>' for S in SITES)
 open(OUT+'/index.html','w').write(f'<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Vicon Toshkent — каталоги</title><body style="margin:0;padding:24px;background:#f3f6fa;font-family:system-ui"><h1 style="font:800 26px system-ui">Vicon Toshkent</h1><p style="color:#556">Каталоги с остатками на {DATE}</p>{links}</body>')
+# подробности: по файлу на товар, грузится только при открытии
+_ID=f'{OUT}/info'; shutil.rmtree(_ID,ignore_errors=True); os.makedirs(_ID+'/img')
+for i in used:
+    v=INFO.get(str(i))
+    if not v: continue
+    for m in v.get('media',[]):
+        if m.get('src'):
+            src=os.path.join(os.path.dirname(_IF),m['src'])
+            if os.path.exists(src): shutil.copy(src,f'{_ID}/{m["src"]}')
+    v=dict(v,media=[m for m in v.get('media',[]) if m.get('type')=='video' or (m.get('src') and os.path.exists(f'{_ID}/{m["src"]}'))])
+    open(f'{_ID}/{i}.json','w').write(json.dumps(v,ensure_ascii=False))
+report.append(f'подробности: {sum(1 for i in used if str(i) in INFO)} товаров')
 for dname in ('img','th'):   # убрать фото товаров, которых больше нет
     for f in os.listdir(f'{OUT}/{dname}'):
         if f.endswith('.jpg') and int(f[:-4]) not in used: os.remove(f'{OUT}/{dname}/{f}')

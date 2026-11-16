@@ -7,3 +7,4 @@ _site/
 __pycache__/
 catalog2.html
 toys.html
+!info/*.json
