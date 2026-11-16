@@ -1,0 +1,9 @@
+*.json
+!uz.json
+img2/
+img_big/
+pdf/
+_site/
+__pycache__/
+catalog2.html
+toys.html
