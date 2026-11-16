@@ -25,6 +25,7 @@ def get_all(p):
 def run(*args):
     step('▶ '+' '.join(args)); subprocess.run([PY,*args],check=True,timeout=1800)
 
+for d in ('img2','img_big','pdf'): os.makedirs(d,exist_ok=True)   # на чистой машине GitHub папок нет
 step('остатки и прайс из Linko')
 bal=get_all('stock/all_balances/?stock=1'); pr=get_all('sales/price_list_item/?price_list=4')
 if len(bal)<300 or len(pr)<500: sys.exit(f'подозрительно мало данных {len(bal)}/{len(pr)} — сайт не трогаю')
