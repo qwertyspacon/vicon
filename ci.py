@@ -10,16 +10,17 @@ def step(m): print(time.strftime('%H:%M:%S'),m,flush=True)
 def get_all(p):
     out=[];url=B+p+'&page_size=200'
     while url:
-        for a in range(4):
+        for a in range(7):   # Linko иногда подвисает — ждём до ~15 мин
             try:
                 r=urllib.request.Request(url,headers={'Authorization':'Token '+tok})
-                d=json.load(urllib.request.urlopen(r,timeout=120)); break
+                d=json.load(urllib.request.urlopen(r,timeout=90)); break
             except urllib.error.HTTPError as e:
                 if e.code in (401,403): sys.exit(f'Linko не пустил (код {e.code}): токен устарел, нужен новый вход')
-                if a==3: raise
-            except Exception:
-                if a==3: raise
-            time.sleep(15*(a+1))
+                if a==6: raise
+            except Exception as e:
+                step(f'Linko не ответил ({type(e).__name__}), попытка {a+1}/7')
+                if a==6: raise
+            time.sleep(30*(a+1))
         out+=d['results']; url=d.get('next')
     return out
 def run(*args):
