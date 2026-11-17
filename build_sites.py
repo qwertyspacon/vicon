@@ -104,6 +104,10 @@ def pic(i):
         im.thumbnail((360,450)); im.save(t+'.tmp',format='JPEG',quality=62,optimize=True,progressive=True); os.replace(t+'.tmp',t)
     return True
 tpl=open('site_tpl.html').read()
+_FD=os.path.join(os.path.dirname(os.path.abspath(__file__)),'fonts')   # шрифты свои, без Google: в Узбекистане чужие сервера бывают медленными
+os.makedirs(OUT+'/fonts',exist_ok=True)
+for _f in os.listdir(_FD):
+    if _f.endswith('.woff2'): shutil.copy(os.path.join(_FD,_f),OUT+'/fonts/'+_f)
 if IMGV: open(OUT+'/.imgv2','w').write('1')
 used=set(); report=[]
 _IF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'info','info.json')
@@ -135,8 +139,11 @@ for S in SITES:
     site=dict(key=S['key'],icon=S['icon'],h1=S['h1'],lead=S['lead'],tg=TG,pdf=bool(pf),feat=feat,ft=S['feat'],fs=S['featsub'],eyebrow=S['eyebrow'],
               others=[dict(key=o['key'],icon=o['icon'],h1=o['h1']) for o in SITES if o is not S])
     d=f'{OUT}/{S["key"]}.new'; shutil.rmtree(d,ignore_errors=True); os.makedirs(d)
-    open(d+'/data.js','w').write('window.DATA='+json.dumps(dict(cats=cats,prods=prods,date=DATE,ts=int(time.time()),site=site),ensure_ascii=False)+';')
-    h=tpl
+    DJS='window.DATA='+json.dumps(dict(cats=cats,prods=prods,date=DATE,ts=int(time.time()),site=site),ensure_ascii=False)+';'
+    open(d+'/data.js','w').write(DJS)
+    hfam='playfair' if 'Playfair' in S['hf'] else 'unbounded'
+    FONTS=''.join(open(os.path.join(_FD,f+'.css')).read() for f in ('manrope',hfam))
+    h=tpl.replace('__FONTS__',FONTS).replace('__DATAJS__',DJS.replace('</','<\\/'))   # всё в одном файле: телефон открывает за один заход
     for k,v in dict(__TITLE__=S['title'],__DESC__=S['lead'],__D__=S['d'],__M__=S['m'],__L__=S['l'],__BG__=S['bg'],__ACC__=S['acc'],__HF__=S['hf'],__THEME__=S['key'],__ICON__=S['icon'],__V__=str(int(time.time())),__UZ__=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'uz.json')).read()).items(): h=h.replace(k,v)
     open(d+'/index.html','w').write(h)
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sw_tpl.js'),d+'/sw.js')
