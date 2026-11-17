@@ -217,6 +217,7 @@ html[lang=uz] body{word-spacing:.08em}
 </head>
 <body class="t-__THEME__">
 <div class="top"><div class="logo" onclick="go('')"><b>__ICON__</b>VICON</div><button class="lng" onclick="setLang(LANG=='uz'?'ru':'uz')" id="lng"></button><div class="search"><input id="q" type="search" placeholder="Найти товар или артикул" autocomplete="off"></div></div>
+<div id="live" style="display:none;text-align:center;font-size:11px;opacity:.6;padding:3px 0"></div>
 <div id="stale" style="display:none;background:#fff3cd;color:#664d03;padding:8px 14px;font-size:13px;text-align:center">Остатки могли устареть — уточняйте наличие при заказе.</div>
 <div id="app"><div style="padding:60px 20px;text-align:center;color:#8a9aa0;font:600 16px system-ui,sans-serif">⏳ Загружаем каталог…</div></div>
 
@@ -261,7 +262,7 @@ function chg(id,d){const q=(cart[id]||0)+d;if(q<=0)delete cart[id];else cart[id]
   if($('#ov').classList.contains('on')&&ordOpen)openOrder(true)}
 function qtyHtml(id){const p=byId[id],q=cart[id];
   const bx=p.box&&p.box<=p.stock?`<button class="boxb" onclick="chg(${id},${p.box})">+ коробка (${p.box} шт)</button>`:'';
-  if(!q)return `<button class="add" onclick="chg(${id},1)">+ В заявку</button>`+bx;
+  if(!q)return p.stock<=0?`<div class="over">Нет в наличии</div>`:`<button class="add" onclick="chg(${id},1)">+ В заявку</button>`+bx;
   return `<div class="qty"><button onclick="chg(${id},-1)">−</button><input type="number" inputmode="numeric" min="0" value="${q}" onchange="setQ(${id},this.value)" onfocus="this.select()"><button onclick="chg(${id},1)">+</button></div>`+bx+(q>p.stock?`<div class="over">На складе только ${fmt(p.stock)} ${p.unit}</div>`:'')}
 const IMG='../';
 const img=(p,k)=>p.img?`<img loading="lazy" onerror="if(!this.dataset.r){this.dataset.r=1;setTimeout(()=>{this.src=this.src+'?r=1'},1500)}" src="${IMG}${k}/${p.id}.jpg" alt="${esc(p.name)}">`:'<span style="color:#8aa;font-size:13px">фото нет</span>';
@@ -402,6 +403,16 @@ function openOrder(keep){ordOpen=true;const ids=Object.keys(cart);
 function copyOrder(){const t=orderText();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$('#cpb').textContent='✅ Скопировано'}).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();$('#cpb').textContent='✅ Скопировано'})}
 if(D.ts&&(Date.now()/1000-D.ts)>30*3600)$('#stale').style.display='block';
 $('#lng').textContent=LANG=='uz'?'RU':'O‘Z';upd();route();trNode(document.body);
+/* живые остатки из Linko: сервер кладёт их каждые 3 мин, страница берёт при каждом открытии (не мешает показу) */
+(async()=>{try{const c=new AbortController();setTimeout(()=>c.abort(),6000);
+  const j=await (await fetch('https://raw.githubusercontent.com/qwertyspacon/vicon/stock/stock.json?t='+Math.floor(Date.now()/60000),{signal:c.signal,cache:'no-store'})).json();
+  if(!j||!j.s||!j.t||Object.keys(j.s).length<300)return;
+  let ch=0;P.forEach(p=>{const v=j.s[p.id],n=v==null?0:v;if(n!==p.stock){p.stock=n;ch++}});
+  if(Date.now()/1000-j.t<3*3600)$('#stale').style.display='none';
+  const t=new Date(j.t*1000),L=$('#live');L.textContent='Остатки обновлены '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');L.style.display='block';
+  if(ch&&!$('#ov').classList.contains('on')&&!document.activeElement.matches('input')){const y=scrollY;route();scrollTo(0,y)}
+  else if(ch)document.querySelectorAll('[data-q]').forEach(el=>{if(!el.contains(document.activeElement))el.innerHTML=qtyHtml(+el.dataset.q)});
+}catch(e){}})();
 if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
 </script>
 </body>
