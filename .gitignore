@@ -8,3 +8,4 @@ __pycache__/
 catalog2.html
 toys.html
 !info/*.json
+srv/

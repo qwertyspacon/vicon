@@ -38,6 +38,7 @@ jobs:
       - name: Linko → сайт
         env:
           LINKO_TOKEN: ${{ secrets.LINKO_TOKEN }}
+          LINKO_DATA_KEY: ${{ secrets.LINKO_DATA_KEY }}
         run: python ci.py
       - name: Сохранить фото на следующий раз
         if: always()
