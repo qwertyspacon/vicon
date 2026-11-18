@@ -115,7 +115,7 @@ a{color:inherit}
 .bar select{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#fff;font:600 14px Manrope,system-ui;color:var(--ink)}
 /* карточка товара */
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
-.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:var(--sh);display:flex;flex-direction:column;position:relative;transition:box-shadow .25s,transform .25s}
+.card{cursor:pointer;background:#fff;border-radius:20px;overflow:hidden;box-shadow:var(--sh);display:flex;flex-direction:column;position:relative;transition:box-shadow .25s,transform .25s}
 .card:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
 .card .im{aspect-ratio:4/5;background:linear-gradient(180deg,#fff,#f6f6f4);cursor:zoom-in;position:relative;display:flex;align-items:center;justify-content:center;padding:6px}
 .card .im img{width:100%;height:100%;object-fit:contain}
@@ -197,7 +197,7 @@ a{color:inherit}
 .t-apteka .cat b,.t-apteka .sh h2{font-weight:700}
 .t-detskoe .cat{border-radius:28px}
 .t-detskoe .hero h1{font-size:clamp(30px,7.6vw,58px)}
-.t-detskoe .conf{position:absolute;font-size:26px;animation:fl 5s ease-in-out infinite;z-index:1;opacity:.9}
+.t-detskoe .conf{pointer-events:none;position:absolute;font-size:26px;animation:fl 5s ease-in-out infinite;z-index:1;opacity:.9}
 .t-vse .stats b,.t-vse .hero h1{letter-spacing:-.03em}
 @media(min-width:640px){.cats{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(3,1fr)}.trust{grid-template-columns:repeat(4,1fr)}
  .sheet{left:50%;right:auto;width:540px;transform:translateX(-50%);bottom:auto;top:4vh;border-radius:26px;max-height:92vh}
@@ -273,11 +273,12 @@ const IMG='../';
 const low=p=>p.stock>0&&p.stock<=5;   // «Скоро закончится»
 const img=(p,k)=>p.img?`<img loading="lazy" onerror="if(!this.dataset.r){this.dataset.r=1;setTimeout(()=>{this.src=this.src+'?r=1'},1500)}" src="${IMG}${k}/${p.id}.jpg" alt="${esc(p.name)}">`:'<span style="color:#8aa;font-size:13px">фото нет</span>';
 function card(p){
-  return `<div class="card"><div class="bdgs">${p.new?'<div class="badge nw">Новинка</div>':''}${p.hits>=8?'<div class="badge">★ Хит продаж</div>':''}</div>
-  <div class="im" onclick="openP(${p.id})">${img(p,'th')}${p.img?'<div class="lens">⤢</div>':''}</div>
-  <div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm" onclick="openP(${p.id})">${esc(p.name)}</div>${p.inf?`<span class="more" onclick="openP(${p.id})">ℹ️ Подробнее</span>`:''}
+  return `<div class="card" onclick="cardTap(event,${p.id})"><div class="bdgs">${p.new?'<div class="badge nw">Новинка</div>':''}${p.hits>=8?'<div class="badge">★ Хит продаж</div>':''}</div>
+  <div class="im">${img(p,'th')}${p.img?'<div class="lens">⤢</div>':''}</div>
+  <div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm">${esc(p.name)}</div>${p.inf?`<span class="more">ℹ️ Подробнее</span>`:''}
   <div class="meta">Артикул: <b>${esc(p.art)}</b><br>В наличии: <b>${fmt(p.stock)} ${p.unit}</b>${low(p)?'<br><span class="low">⏳ Скоро закончится</span>':''}${p.note?'<br>'+esc(p.note):''}</div>
   <div class="price">${fmt(p.price)} <small>сум ${p.per}</small></div><div data-q="${p.id}">${qtyHtml(p.id)}</div></div></div>`}
+function cardTap(e,id){if(e.target.closest('button,input,select,a,.qty'))return;openP(id)}   // вся карточка открывает товар, кроме кнопок
 function sortList(a){a=a.slice();
   if(sortMode=='pop')a.sort((x,y)=>y.hits-x.hits||y.stock-x.stock);
   if(sortMode=='lo')a.sort((x,y)=>x.price-y.price);if(sortMode=='hi')a.sort((x,y)=>y.price-x.price);
@@ -300,7 +301,7 @@ function home(){
   <div class="wrap">${histHtml()}
   <div class="trust rv"><div><span class="ti">🔄</span><span><b>Остатки 3 раза в день</b>Обновлено ${esc(D.date)}</span></div><div><span class="ti">✈️</span><span><b>Заявка в 1 касание</b>Список уходит в Telegram</span></div><div><span class="ti">📦</span><span><b>Оптом от коробки</b>Кнопка «+ коробка» у товара</span></div><div><span class="ti">🔍</span><span><b>Крупные фото</b>Нажмите и приблизьте</span></div></div>
   ${F.length?`<div class="sh rv"><div><span class="k">Витрина</span><h2>${esc(S.ft)}</h2><p>${esc(S.fs)}</p></div></div>
-  <div class="rail">${F.map((p,n)=>`<div class="sc"><span class="n">${String(n+1).padStart(2,'0')}</span><div class="im" onclick="list=[];openP(${p.id})"><img loading="lazy" src="${IMG}th/${p.id}.jpg" alt="${esc(p.name)}"></div><div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm" onclick="list=[];openP(${p.id})">${esc(p.name)}</div><div class="meta">Арт. <b>${esc(p.art)}</b> · в наличии <b>${fmt(p.stock)}</b></div><div class="price">${fmt(p.price)} <small>сум ${p.per}</small></div><div data-q="${p.id}">${qtyHtml(p.id)}</div></div></div>`).join('')}</div>`:''}
+  <div class="rail">${F.map((p,n)=>`<div class="sc" onclick="list=[];cardTap(event,${p.id})"><span class="n">${String(n+1).padStart(2,'0')}</span><div class="im"><img loading="lazy" src="${IMG}th/${p.id}.jpg" alt="${esc(p.name)}"></div><div class="bd">${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<div class="nm">${esc(p.name)}</div><div class="meta">Арт. <b>${esc(p.art)}</b> · в наличии <b>${fmt(p.stock)}</b></div><div class="price">${fmt(p.price)} <small>сум ${p.per}</small></div><div data-q="${p.id}">${qtyHtml(p.id)}</div></div></div>`).join('')}</div>`:''}
   <div class="sh rv" id="cats"><div><span class="k">Каталог</span><h2>Разделы</h2><p>${C.length} разделов · нажмите, чтобы открыть</p></div></div>
   <div class="cats">${C.map((c,n)=>{const f=c.cover?byId[c.cover]:P.find(p=>p.cat==c.id&&p.img);return `<div class="cat rv ${n<2?'big':''}" style="--c:${pal[n%pal.length]}" onclick="go('cat/${c.id}')"><div class="bgc"></div>${f?`<img loading="lazy" src="${IMG}th/${f.id}.jpg" alt="">`:''}<span class="ic">${c.icon}</span><b>${esc(c.title)}</b><span>${esc(c.sub)}</span><i>${c.count} товаров →</i></div>`}).join('')}</div>
   <section class="how rv" id="how"><h2>Как заказать</h2><div class="steps"><div><b>1</b><span>Нажмите «+ В заявку» у нужных товаров. Можно сразу коробкой.</span></div><div><b>2</b><span>Внизу появится «Моя заявка» — проверьте список и укажите магазин и телефон.</span></div><div><b>3</b><span>Нажмите «Отправить в Telegram» — заявка придёт агенту одним сообщением.</span></div></div>
@@ -328,7 +329,7 @@ addEventListener('hashchange',route);
 let st;$('#q').addEventListener('input',e=>{clearTimeout(st);const v=e.target.value;st=setTimeout(()=>{if(v.trim())history.replaceState(null,'','#/q/'+encodeURIComponent(v)),searchView(v);else go('')},250)});
 /* карточка */
 let ordOpenFlag=false,ordOpen=false,curList=[],curIdx=0;
-function openP(id){ordOpen=false;curList=sortList(list.length?list:P);curIdx=curList.findIndex(p=>p.id==id);if(curIdx<0){curList=[byId[id]];curIdx=0}showP()}
+function openP(id){ordOpen=false;curList=sortList(list.length?list:P);curIdx=curList.findIndex(p=>p.id==id);if(curIdx<0){if(!byId[id])return;curList=[byId[id]];curIdx=0}showP()}
 function showP(){const p=curList[curIdx];
   $('#sheet').innerHTML=`<button class="x" onclick="closeSheet()">✕</button>${p.kind?`<div class="kind">${esc(p.kind)}</div>`:''}<h3 style="padding-right:46px">${esc(p.name)}</h3>
   <div class="pimg" onclick="${p.img?`openViewer(${p.id})`:''}">${img(p,'img')}${p.img?'<div class="hint">🔍 Нажмите, чтобы приблизить</div>':''}</div>
