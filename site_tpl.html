@@ -411,6 +411,12 @@ function repeatOrder(n){const h=hist[n];if(!h)return;if(Object.keys(cart).length
 function newOrder(){cart={};cust={};setPhoto(null);localStorage.removeItem('vc_cust');save();closeSheet();document.querySelectorAll('[data-q]').forEach(el=>el.innerHTML=qtyHtml(+el.dataset.q));toast('Готово — можно собирать новую заявку')}
 function askSent(){if(!sentAt||!Object.keys(cart).length)return;sentAt=0;
   $('#sheet').innerHTML=`<h3>Заявку отправили?</h3><div class="note" style="margin:6px 0 14px">Если отправили — очистите, чтобы следующий заказ начинался с нуля и не смешался с этим.</div><button class="send" style="width:100%;border:0;cursor:pointer" onclick="newOrder()">✅ Да, отправил — очистить</button><button class="sec2" onclick="openOrder()">↩️ Нет, вернуться к заявке</button>`;$('#ov').classList.add('on');document.body.style.overflow='hidden'}
+/* Кнопка «назад» телефона закрывает открытую карточку/фото, а не весь сайт */
+if("scrollRestoration" in history)history.scrollRestoration="manual";
+function layerDepth(){return($('#ov').classList.contains('on')?1:0)+($('#viewer').classList.contains('on')?1:0)}
+function syncLayers(){const d=layerDepth(),cur=(history.state&&history.state.layer)||0;if(d>cur){for(let k=cur+1;k<=d;k++)history.pushState({layer:k},'')}else if(d<cur)history.go(d-cur)}
+window.addEventListener('popstate',()=>{const t=(history.state&&history.state.layer)||0;if(layerDepth()>t&&$('#viewer').classList.contains('on'))closeViewer();if(layerDepth()>t&&$('#ov').classList.contains('on'))closeSheet()});
+{const mo=new MutationObserver(syncLayers);['#ov','#viewer'].forEach(s=>mo.observe($(s),{attributes:true,attributeFilter:['class']}))}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible')setTimeout(askSent,400)});window.addEventListener('focus',()=>setTimeout(askSent,400));
 function tgHref(){return `https://t.me/${TG}?text=${encodeURIComponent(orderText())}`}
 function openOrder(keep){ordOpen=true;const ids=Object.keys(cart);
