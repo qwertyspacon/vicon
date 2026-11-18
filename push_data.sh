@@ -10,7 +10,7 @@ once() {
   export DATA_KEY=$(cat $L/.datakey)
   rm -rf $W/d; mkdir -p $W/d
   python3 fetch_data.py $W/d || return 1
-  tar czf $W/data.tgz -C $W/d balances.json prices.json my_order_items.json stamp.txt || return 1
+  tar czf $W/data.tgz -C $W/d balances.json prices.json my_order_items.json new.json stamp.txt || return 1
   openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:DATA_KEY -in $W/data.tgz -out $W/linko-data.enc || return 1
   rm -rf $W/g; git clone -q --depth 1 --no-checkout "$(git remote get-url origin)" $W/g && cd $W/g || return 1
   git checkout -q --orphan linko-data && git rm -rqf . 2>/dev/null; cp $W/linko-data.enc . && git add linko-data.enc &&

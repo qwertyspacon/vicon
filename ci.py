@@ -40,6 +40,7 @@ def from_server(max_age_h):
         step(f'данные с нашего сервера: {age:.1f} ч назад')
         if age>max_age_h: return False
         for f in ('balances.json','prices.json','my_order_items.json'): shutil.copy(f'srv/{f}',f)
+        if os.path.exists('srv/new.json'): shutil.copy('srv/new.json','new.json')   # пометка «Новинка»
         return True
     except Exception as e:
         step(f'данных с сервера нет: {e}'); return False

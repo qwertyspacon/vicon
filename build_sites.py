@@ -112,6 +112,7 @@ if IMGV: open(OUT+'/.imgv2','w').write('1')
 used=set(); report=[]
 _IF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'info','info.json')
 INFO=json.load(open(_IF)) if os.path.exists(_IF) else {}   # описания «Подробнее»: {id: {ru,uz,media}}
+NEW={int(k) for k in (json.load(open('new.json')) if os.path.exists('new.json') else {})}   # «Новинка»: заведён в Linko за 30 дней
 for S in SITES:
     cats=[];prods=[];seen=set()
     for n,(t,s,ids,ic) in enumerate(S['secs'],1):
@@ -125,7 +126,7 @@ for S in SITES:
             elif m and 'ZAPAS' in x['title'].upper() and unit=='шт': note=f'В упаковке {m.group(1)} шт, цена за упаковку'
             prods.append(dict(id=i,cat=n,name=B.clean(x['title']) or x['title'],raw=x['title'],kind=kind(i),art=str(x['vendor_code'] or x['barcode'] or i),
                 stock=int(float(x['available'])),unit=unit,price=int(cur[i]),per=('за шт' if unit=='шт' else 'за '+unit.lower()),
-                hits=len(pop[i]),note=note,img=im,inf=int(str(i) in INFO),box=(int(bx) if bx and unit=='шт' and 1<int(bx)<=5000 else 0)))
+                hits=len(pop[i]),note=note,new=int(i in NEW),img=im,inf=int(str(i) in INFO),box=(int(bx) if bx and unit=='шт' and 1<int(bx)<=5000 else 0)))
     pid={p['id']:p for p in prods}
     def pick(c,by): xs=[p for p in prods if p['cat']==c['id'] and p['img']]; return max(xs,key=by)['id'] if xs else 0
     byp=lambda p:(p['price']*(1+p['hits']),p['stock'])

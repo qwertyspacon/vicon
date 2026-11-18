@@ -18,6 +18,13 @@ def get_all(p):
 bal=get_all('stock/all_balances/?stock=1'); pr=get_all('sales/price_list_item/?price_list=4')
 if len(bal)<300 or len(pr)<500: sys.exit(f'подозрительно мало данных {len(bal)}/{len(pr)}')
 json.dump(bal,open(f'{out}/balances.json','w'),ensure_ascii=False); json.dump(pr,open(f'{out}/prices.json','w'),ensure_ascii=False)
+try:   # новинки: товары, заведённые в Linko за последние 30 дней (одна страница, только чтение)
+    import datetime
+    lim=(datetime.date.today()-datetime.timedelta(days=30)).isoformat()
+    np=json.load(urllib.request.urlopen(urllib.request.Request(B+'main/product/?ordering=-created_date&page_size=200',headers={'Authorization':'Token '+tok}),timeout=90))['results']
+    new={x['id']:x['created_date'][:10] for x in np if (x.get('created_date') or '')[:10]>=lim}
+except Exception as e: print('новинки не забрались:',e); new={}
+json.dump(new,open(f'{out}/new.json','w'))
 here=os.path.dirname(os.path.abspath(__file__))
 r=subprocess.run([sys.executable,os.path.join(here,'orders.py')],cwd=out,timeout=900)
 if r.returncode or not os.path.exists(f'{out}/my_order_items.json'):
