@@ -260,5 +260,14 @@
 "остатки на": "qoldiq sanasi:",
 "Подробнее": "Batafsil",
 "Нет в наличии": "Mavjud emas",
-"Остатки обновлены": "Qoldiqlar yangilandi"
+"Остатки обновлены": "Qoldiqlar yangilandi",
+"Сфотографировать магазин": "Do‘konni suratga olish",
+"Фото магазина": "Do‘kon surati",
+"Фото уйдёт вместе с заявкой": "Surat buyurtma bilan birga yuboriladi",
+"Переснять": "Qayta olish",
+"Убрать": "Olib tashlash",
+"Выберите Telegram и чат. Если текста нет — нажмите «Вставить»": "Telegram va chatni tanlang. Matn bo‘lmasa — «Qo‘yish»ni bosing",
+"Фото сохранено в телефон — прикрепите его в чате": "Surat telefonga saqlandi — uni chatga biriktiring",
+"Комментарий к заявке (необязательно)": "Buyurtmaga izoh (ixtiyoriy)",
+"Комментарий": "Izoh"
 }

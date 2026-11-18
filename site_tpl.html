@@ -185,7 +185,8 @@ a{color:inherit}
 .qty input::-webkit-inner-spin-button{-webkit-appearance:none}
 .ordrow .qty input{width:44px;font-size:15px}
 .over{color:#c0392b;font-size:12px;font-weight:700;margin-top:4px}
-.cf{display:grid;gap:8px;margin-top:12px}.cf input{border:1px solid var(--line);border-radius:14px;padding:13px;font:500 16px Manrope,system-ui}
+.ph{margin-top:12px}.ph img{width:96px;height:96px;object-fit:cover;border-radius:12px;float:left;margin-right:12px}.ph>div{overflow:hidden;min-height:96px}.ph small{display:block;opacity:.7;margin:2px 0 8px}.ph div button{background:#f1f1ef;color:var(--d);border-radius:10px;padding:8px 12px;font-weight:700;border:0;cursor:pointer}
+.cf{display:grid;gap:8px;margin-top:12px}.cf textarea{border:1px solid var(--line);border-radius:14px;padding:13px;font:500 16px Manrope,system-ui;resize:vertical}.cf input{border:1px solid var(--line);border-radius:14px;padding:13px;font:500 16px Manrope,system-ui}
 .rv{opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}.rv.in{opacity:1;transform:none}
 /* темы */
 .t-apteka .hero h1{font-weight:700;letter-spacing:-.01em}
@@ -372,7 +373,7 @@ function zoomAt(cx,cy,f){let ns=Math.min(6,Math.max(1,V.s*f));f=ns/V.s;V.x=cx-(c
 addEventListener('keydown',e=>{if(e.key=='Escape'){if(vw.classList.contains('on'))closeViewer();else closeSheet()}});
 /* заявка */
 function orderText(){const L=Object.entries(cart).map(([i,q],n)=>{const p=byId[i];return `${n+1}. Арт. ${p.art} — ${p.name} — ${q} ${p.unit=='шт'?'шт':p.unit.toLowerCase()} (${fmt(p.price)} × ${q} = ${fmt(p.price*q)} сум)`});
-  const who=[cust.shop&&'Магазин: '+cust.shop,cust.phone&&'Телефон: '+cust.phone,cust.addr&&'Адрес: '+cust.addr].filter(Boolean).join('\n');
+  const who=[cust.shop&&'Магазин: '+cust.shop,cust.phone&&'Телефон: '+cust.phone,cust.addr&&'Адрес: '+cust.addr,cust.note&&'Комментарий: '+cust.note].filter(Boolean).join('\n');
   const t=Object.entries(cart).reduce((s,[i,q])=>s+byId[i].price*q,0);
   return 'Assalomu alaykum! Здравствуйте!\n'+tr('Заявка из каталога «'+S.h1+'»:\n'+(who?'\n'+who+'\n':'')+'\n'+L.join('\n')+'\n\nВсего позиций: '+L.length+'\nИтого: '+fmt(t)+' сум\n(остатки на '+D.date+')')}
 let cust={};try{cust=JSON.parse(localStorage.getItem('vc_cust')||'{}')}catch(e){}
@@ -380,9 +381,17 @@ function setC(k,v){cust[k]=v.trim();localStorage.setItem('vc_cust',JSON.stringif
 function shareHref(){return `https://t.me/share/url?url=${encodeURIComponent(orderText())}`}
 function toast(m){let d=document.getElementById('tst');if(!d){d=document.createElement('div');d.id='tst';d.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2a37;color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:9999;max-width:90%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3)';document.body.appendChild(d)}d.textContent=m;d.style.display='block';clearTimeout(d._t);d._t=setTimeout(()=>d.style.display='none',5000)}
 function cpSync(t){try{const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();a.setSelectionRange(0,t.length);document.execCommand('copy');a.remove()}catch(e){}try{navigator.clipboard&&navigator.clipboard.writeText(t).catch(()=>{})}catch(e){}}
-function goTg(el){cpSync(orderText());const u=el.id=='tgo'?shareHref():tgHref();toast('Список скопирован. Если в чате пусто — нажмите «Вставить»');sentAt=Date.now();setTimeout(()=>{location.href=u},150)}
+let shopPhoto=null,shopPhotoUrl='';
+function setPhoto(f){if(shopPhotoUrl)URL.revokeObjectURL(shopPhotoUrl);shopPhoto=f;shopPhotoUrl=f?URL.createObjectURL(f):'';if(ordOpen)openOrder(true)}
+async function takePhoto(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  try{const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);
+    const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.82));setPhoto(new File([bl],'magazin.jpg',{type:'image/jpeg'}))}catch(e){setPhoto(f)}}
+function goTg(el){const txt=orderText();cpSync(txt);
+  if(shopPhoto){if(navigator.canShare&&navigator.canShare({files:[shopPhoto]})){sentAt=Date.now();navigator.share({files:[shopPhoto],text:txt}).catch(e=>{if(e&&e.name=='AbortError')sentAt=0});toast('Выберите Telegram и чат. Если текста нет — нажмите «Вставить»');return}
+    const a=document.createElement('a');a.href=shopPhotoUrl;a.download='magazin.jpg';document.body.appendChild(a);a.click();a.remove();toast('Фото сохранено в телефон — прикрепите его в чате');sentAt=Date.now();setTimeout(()=>{location.href=el.id=='tgo'?shareHref():tgHref()},1200);return}
+  const u=el.id=='tgo'?shareHref():tgHref();toast('Список скопирован. Если в чате пусто — нажмите «Вставить»');sentAt=Date.now();setTimeout(()=>{location.href=u},150)}
 let sentAt=0;
-function newOrder(){cart={};cust={};localStorage.removeItem('vc_cust');save();closeSheet();document.querySelectorAll('[data-q]').forEach(el=>el.innerHTML=qtyHtml(+el.dataset.q));toast('Готово — можно собирать новую заявку')}
+function newOrder(){cart={};cust={};setPhoto(null);localStorage.removeItem('vc_cust');save();closeSheet();document.querySelectorAll('[data-q]').forEach(el=>el.innerHTML=qtyHtml(+el.dataset.q));toast('Готово — можно собирать новую заявку')}
 function askSent(){if(!sentAt||!Object.keys(cart).length)return;sentAt=0;
   $('#sheet').innerHTML=`<h3>Заявку отправили?</h3><div class="note" style="margin:6px 0 14px">Если отправили — очистите, чтобы следующий заказ начинался с нуля и не смешался с этим.</div><button class="send" style="width:100%;border:0;cursor:pointer" onclick="newOrder()">✅ Да, отправил — очистить</button><button class="sec2" onclick="openOrder()">↩️ Нет, вернуться к заявке</button>`;$('#ov').classList.add('on');document.body.style.overflow='hidden'}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible')setTimeout(askSent,400)});window.addEventListener('focus',()=>setTimeout(askSent,400));
@@ -393,7 +402,8 @@ function openOrder(keep){ordOpen=true;const ids=Object.keys(cart);
   $('#sheet').innerHTML=`<button class="x" onclick="closeSheet()">✕</button><h3>🛒 Моя заявка</h3>
   ${ids.map(i=>{const p=byId[i];return `<div class="ordrow">${p.img?`<img src="${IMG}th/${p.id}.jpg">`:''}<div class="t">${esc(p.name)}<small>Арт. ${esc(p.art)} · ${fmt(p.price)} сум ${p.per}</small>${cart[i]>p.stock?`<small style="color:#c0392b">На складе только ${fmt(p.stock)}</small>`:''}</div><div class="qty"><button onclick="chg(${p.id},-1)">−</button><input type="number" inputmode="numeric" value="${cart[i]}" onchange="setQ(${p.id},this.value)" onfocus="this.select()"><button onclick="chg(${p.id},1)">+</button></div></div>`}).join('')}
   <div class="tot"><span>Итого</span><span>${fmt(t)} сум</span></div>
-  <div class="cf"><input placeholder="Название магазина или аптеки" value="${esc(cust.shop||'')}" oninput="setC('shop',this.value)"><input type="tel" placeholder="Телефон" value="${esc(cust.phone||'')}" oninput="setC('phone',this.value)"><input placeholder="Адрес или ориентир" value="${esc(cust.addr||'')}" oninput="setC('addr',this.value)"></div>
+  <div class="cf"><input placeholder="Название магазина или аптеки" value="${esc(cust.shop||'')}" oninput="setC('shop',this.value)"><input type="tel" placeholder="Телефон" value="${esc(cust.phone||'')}" oninput="setC('phone',this.value)"><input placeholder="Адрес или ориентир" value="${esc(cust.addr||'')}" oninput="setC('addr',this.value)"><textarea rows="2" placeholder="Комментарий к заявке (необязательно)" oninput="setC('note',this.value)">${esc(cust.note||'')}</textarea></div>
+  <div class="ph">${shopPhoto?`<img src="${shopPhotoUrl}" alt=""><div><b>📷 Фото магазина</b><small>Фото уйдёт вместе с заявкой</small><button type="button" onclick="$('#phf').click()">Переснять</button> <button type="button" onclick="setPhoto(null)">Убрать</button></div>`:`<button type="button" class="sec2" style="margin:0" onclick="$('#phf').click()">📷 Сфотографировать магазин</button>`}<input type="file" id="phf" accept="image/*" capture="environment" style="display:none" onchange="takePhoto(this)"></div>
   ${TG?`<button type="button" class="send" id="snd" style="border:0;cursor:pointer" onclick="goTg(this)">✈️ Отправить своему агенту (@${TG})</button>`:''}
   <button type="button" class="send" id="tgo" style="cursor:pointer;${TG?'background:#fff;color:#1e88d0;border:2px solid #2aabee;box-shadow:none':'border:0'}" onclick="goTg(this)">✈️ Отправить в Telegram<br><small style="font-weight:600;font-size:13px;opacity:.9">откроются чаты — выберите, кому</small></button>
   <button class="sec2" onclick="copyOrder()" id="cpb">📋 Скопировать список</button>
