@@ -23,11 +23,31 @@ try: old=json.load(open('stock.json'))['s']
 except Exception: pass
 json.dump({'t':int(time.time()),'s':s},open('stock.json','w'),separators=(',',':'))
 print('изменилось' if s!=old else 'без изменений',len(s))
+# новый товар в Linko (или вернулся в наличие), а на сайте его нет -> флаг на полную пересборку
+try:
+    site=set()
+    for k in ('tovary','apteki','igrushki'):
+        js=urllib.request.urlopen(f'https://qwertyspacon.github.io/vicon/{k}/data.js?t={int(time.time())}',timeout=60).read().decode()
+        site|={str(p['id']) for p in json.loads(js[js.index('=')+1:js.rstrip().rindex(';')])['prods']}
+    try: ign=set(json.load(open('../vicon-stock.ignore')))
+    except Exception: ign=set()
+    new=sorted(i for i,v in s.items() if v>0 and i not in site and i not in ign)
+    if new: open('../vicon-stock.new','w').write(json.dumps(sorted(set(i for i,v in s.items() if v>0 and i not in site)))); print('нет на сайте:',len(new))
+except Exception as e: print('сверка с сайтом не вышла:',e)
 EOF
   # пушим всегда (время проверки нужно странице), но одной правкой — история не растёт
   git add stock.json && git -c user.name=vicon-stock -c user.email=stock@localhost commit -q --amend -m stock 2>/dev/null ||
     git -c user.name=vicon-stock -c user.email=stock@localhost commit -qm stock || return 1
   git push -qf origin stock 2>&1 | tail -2
+  # пересборка, если в Linko появились товары, которых нет на сайте (не чаще раза в час)
+  N=$R/../vicon-stock.new
+  if [ -f $N ]; then
+    last=$(cat $R/../vicon-stock.rebuilt 2>/dev/null || echo 0)
+    if [ $(( $(date +%s) - last )) -ge 3600 ] && ! pgrep -f "push_data.sh once" >/dev/null; then
+      date +%s > $R/../vicon-stock.rebuilt; mv $N $R/../vicon-stock.ignore
+      echo "новые товары → пересборка сайта"; setsid nohup nice -n 10 bash ~/workspace/projects/vicon-pages/push_data.sh once >> ~/workspace/tmp/linko-data/push.log 2>&1 &
+    fi
+  fi
 }
 case "$1" in
   once) once; echo "exit $?";;

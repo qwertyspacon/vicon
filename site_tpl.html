@@ -286,7 +286,7 @@ const PAL=['#0f766e','#7c3aed','#db2777','#ea580c','#2563eb','#0891b2','#16a34a'
 const PALA=['#0b3b38','#11796c','#8a6a2f','#2f5d62','#1f4e45','#6b5b3a','#2d6a5f','#3f4a3c','#0f5c55','#7a5b2c','#285e61','#4a6b52'];
 function words(t){t=tr(t);const w=t.split(' ');if(w.length<2)return esc(t);const k=Math.ceil(w.length/2);return esc(w.slice(0,k).join(' '))+' <em>'+esc(w.slice(k).join(' '))+'</em>'}
 function home(){
-  const F=(S.feat||[]).map(i=>byId[i]).filter(Boolean);const col=F.slice(0,5);
+  const F=(S.feat||[]).map(i=>byId[i]).filter(p=>p&&p.stock>0);const col=F.slice(0,5);
   const pal=S.key=='apteka'?PALA:PAL;
   const conf=S.key=='detskoe'?['🎈','⭐','🚁','🧸','🎉'].map((e,n)=>`<span class="conf" style="left:${[90,84,62,92,46][n]}%;top:${[3,30,90,58,2][n]}%;animation-delay:-${n}s">${e}</span>`).join(''):'';
   $('#app').innerHTML=`<section class="hero">${conf}<div class="wrap"><div class="hgrid"><div>
@@ -433,6 +433,7 @@ $('#lng').textContent=LANG=='uz'?'RU':'O‘Z';upd();route();trNode(document.body
   const j=await (await fetch('https://raw.githubusercontent.com/qwertyspacon/vicon/stock/stock.json?t='+Math.floor(Date.now()/60000),{signal:c.signal,cache:'no-store'})).json();
   if(!j||!j.s||!j.t||Object.keys(j.s).length<300)return;
   let ch=0;P.forEach(p=>{const v=j.s[p.id],n=v==null?0:v;if(n!==p.stock){p.stock=n;ch++}});
+  for(let k=P.length-1;k>=0;k--)if(P[k].stock<=0){P.splice(k,1);ch++}   // закончилось в Linko — убираем с сайта сразу
   if(Date.now()/1000-j.t<3*3600)$('#stale').style.display='none';
   const t=new Date(j.t*1000),L=$('#live');L.textContent='Остатки обновлены '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');L.style.display='block';
   if(ch&&!$('#ov').classList.contains('on')&&!document.activeElement.matches('input')){const y=scrollY;route();scrollTo(0,y)}
