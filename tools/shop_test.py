@@ -19,7 +19,7 @@ async def one(b, url, dev):
     tag = f"{url.rstrip('/').rsplit('/', 1)[-1]}/{dev}"
     ctx = await b.new_context(**DEVICES[dev]); pg = await ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:120]))
-    pg.on("console", lambda m: errs.append(m.text[:120]) if m.type == "error" and "favicon" not in m.text else None)
+    pg.on("console", lambda m: errs.append((m.text[:80] + " " + (m.location or {}).get("url", "")[-60:])) if m.type == "error" and "favicon" not in m.text else None)
     t = time.time(); await pg.goto(url, wait_until="domcontentloaded")
     await pg.wait_for_selector("#q", state="visible", timeout=15000); load = time.time() - t
     ok(f"{tag}: сайт открылся за {load:.1f} с", load < 8)
