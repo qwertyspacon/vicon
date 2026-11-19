@@ -2,7 +2,7 @@
 # Наш сервер забирает данные из Linko (GitHub Linko не пускает с 17.11) и отдаёт их сборке сайта.
 # Данные шифруются (ключ: ~/workspace/projects/linko/.datakey = секрет LINKO_DATA_KEY), лежат в ветке linko-data
 # (одна правка, история не растёт), затем запускается сборка сайта на GitHub.
-# Разовый запуск:  push_data.sh once      Цикл (07:00, 12:00, 17:00 Ташкент):  setsid nohup push_data.sh loop >/dev/null 2>&1 &
+# Разовый запуск:  push_data.sh once      Цикл (07:00, 12:00, 17:00) — из loop.sh (systemd), не nohup
 cd "$(dirname "$0")"; L=~/workspace/projects/linko; W=~/workspace/tmp/linko-data; LOG=$W/push.log
 mkdir -p $W; chmod 700 $W
 once() {

@@ -2,7 +2,7 @@
 # Живые остатки: каждые 3 минуты (06:30–22:00 Ташкент) читаем ТОЛЬКО остатки из Linko (только чтение, ~6 с)
 # и кладём маленький stock.json в ветку «stock» репозитория. Страница при каждом открытии берёт его
 # с raw.githubusercontent.com и обновляет «в наличии». Полная пересборка сайта — по-прежнему push_data.sh.
-# Запуск цикла:  setsid nohup ~/workspace/projects/vicon-pages/stock_live.sh loop >/dev/null 2>&1 &
+# Запуск цикла: из loop.sh (systemd, projects/loops.txt), не nohup.
 # Разово: stock_live.sh once
 L=~/workspace/projects/linko; R=~/workspace/projects/vicon-stock; LOG=$R.log
 once() {
