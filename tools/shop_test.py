@@ -24,6 +24,13 @@ async def one(b, url, dev):
     await pg.wait_for_selector("#q", state="visible", timeout=15000); load = time.time() - t
     ok(f"{tag}: сайт открылся за {load:.1f} с", load < 8)
     await pg.wait_for_timeout(1500)
+    # слово без «ё» и с другим окончанием («щетка», «перчатка») тоже должно находиться (24.11)
+    w = await pg.evaluate("""(()=>{for(const p of window.DATA.prods){for(const w of (p.kind+' '+p.name).toLowerCase().split(/[^а-яё]+/))
+        if(w.length>=6)return w.replace(/ё/g,'е').slice(0,-1)+(w.endsWith('а')?'и':'а')}return ''})()""")
+    if w:
+        await pg.fill("#q", w); await pg.wait_for_timeout(1500)
+        n = await pg.locator(".card").count()
+        ok(f"{tag}: поиск по слову «{w}»", n > 0, f"{n} шт")
     await pg.fill("#q", "10"); await pg.wait_for_timeout(1500)
     n = await pg.locator(".card").count()
     ok(f"{tag}: поиск по артикулу «10»", n > 0, f"{n} шт")
