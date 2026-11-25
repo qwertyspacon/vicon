@@ -280,5 +280,7 @@
 "Заменить текущую заявку прошлой?": "Joriy buyurtma oldingisi bilan almashtirilsinmi?",
 "Нет в наличии: ": "Mavjud emas: ",
 " поз. — их не добавил": " ta — ular qo'shilmadi",
-"поз.": "ta"
+"поз.": "ta",
+"Можно без фото — заявка отправится и так": "Suratsiz ham bo'ladi — buyurtma baribir yuboriladi",
+"📷 Фото магазина (по желанию)": "📷 Do'kon surati (ixtiyoriy)"
 }
