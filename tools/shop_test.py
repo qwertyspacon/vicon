@@ -6,6 +6,7 @@
 import asyncio, sys, time
 from playwright.async_api import async_playwright
 
+if {"-h", "--help"} & set(sys.argv[1:]): print(__doc__); sys.exit(0)
 SITES = sys.argv[1:] or [f"https://qwertyspacon.github.io/vicon/{s}/" for s in ("apteki", "igrushki", "tovary")]
 DEVICES = {"телефон": dict(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True),
            "компьютер": dict(viewport={"width": 1366, "height": 800})}
